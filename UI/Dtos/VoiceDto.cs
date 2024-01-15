@@ -1,6 +1,10 @@
-﻿namespace UI.Dtos;
+﻿using System.Collections;
+using Domain;
+using Domain.Interfaces;
 
-public class VoiceDto
+namespace UI.Dtos;
+
+public class VoiceDto : IInputData
 {
     public double Meanfreq { get; set; }
     public double Sd { get; set; }
@@ -23,4 +27,27 @@ public class VoiceDto
     public double Dfrange { get; set; }
     public double Modindx { get; set; }
     public string Label { get; set; }
+    
+    
+    public int GetAnswer()
+    {
+        if (Label == "male")
+        {
+            return 1;
+        }
+        
+        return -1;
+    }
+
+    public Sensor[] GetSensors()
+    {
+        var properties = GetType().GetProperties();
+        
+        var result = properties
+            .Where(prop => prop.PropertyType == typeof(double))
+            .Select(prop => new Sensor(prop.Name, (double)prop.GetValue(this)))
+            .ToArray();
+
+        return result;
+    }
 }
