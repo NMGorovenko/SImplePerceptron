@@ -1,6 +1,4 @@
-﻿using UI.Dtos;
-
-namespace UI.Helpers;
+﻿namespace UI.Helpers;
 
 public static class SelectionHelper
 {

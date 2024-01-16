@@ -10,7 +10,6 @@ public class SimplePerceptron
     private double[] weights { get; set; }
     private readonly Random random;
     
-     
     /// <summary>
     /// Constructor.
     /// </summary>
@@ -24,7 +23,6 @@ public class SimplePerceptron
             weights[i] = random.NextDouble() * 2 - 1;
         }
         bias = random.NextDouble() * 2 - 1;
-        
     }
     
     private double bias { get; set; }
@@ -40,17 +38,9 @@ public class SimplePerceptron
                 var trainResult = Train(inputData);
                 epochError += Math.Abs(trainResult.LocalError);
             }
-            Console.WriteLine($"epoch: {epoch}: epochError = {epochError / inputDatas.Count()}");
+            
             totalError += epochError / inputDatas.Count();
         }
-        var meanError = totalError / epochs;
-        Console.WriteLine($"meanError = {meanError}");
-        
-        Console.WriteLine();
-        Console.WriteLine("Trains ended. Statistic!");
-        Console.WriteLine($"Weight: {string.Join(",", weights)}");
-        Console.WriteLine($"bias = {bias}");
-        Console.WriteLine();
     }
 
     private record TrainResult(double LocalError);
@@ -58,26 +48,21 @@ public class SimplePerceptron
     private TrainResult Train(IInputData inputData)
     {
         var target = inputData.GetAnswer();
-        var inputs = inputData.GetSensors();
+        var inputs = inputData.GetProperties();
         var prediction = Predict(inputs);
         var localError = target - prediction;
         
         for (int i = 0; i < weights.Length; i++)
         {
-            weights[i] += LearningRate * inputs[i].Value * localError * (prediction * (1 - prediction));
+            weights[i] += LearningRate * inputs[i] * localError * (prediction * (1 - prediction));
         }
 
         bias += localError * LearningRate * prediction * (1 - prediction);
-        biasHistory.Add(bias);
         
         return new TrainResult(localError);
     }
-    
-    public static List<double> biasHistory = new List<double>();
 
-    
-
-    public double Predict(Sensor[] input)
+    public double Predict(double[] input)
     {
         var weightedSum = GetWeightSum(input);
         weightedSum += bias;
@@ -95,16 +80,16 @@ public class SimplePerceptron
 
     public int PredictBinary(IInputData inputs)
     {
-        var prediction = Predict(inputs.GetSensors());
+        var prediction = Predict(inputs.GetProperties());
         return prediction > 0.5 ? 1 : -1;
     }
 
-    public double GetWeightSum(Sensor[] inputs)
+    public double GetWeightSum(double[] inputs)
     {
         double sum = 0;
         for (int i = 0; i < weights.Length; i++)
         {
-            sum += inputs[i].Value * weights[i];
+            sum += inputs[i] * weights[i];
         }
 
         return sum;

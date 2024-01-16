@@ -1,8 +1,8 @@
 ﻿using System.Globalization;
 using CsvHelper;
-using UI.Dtos;
+using DataAccess.Dtos;
 
-namespace UI.DataSource;
+namespace DataAccess.DataSource;
 
 /// <summary>
 /// Data source.

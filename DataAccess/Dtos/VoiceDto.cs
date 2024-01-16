@@ -1,8 +1,6 @@
-﻿using System.Collections;
-using Domain;
-using Domain.Interfaces;
+﻿using Domain.Interfaces;
 
-namespace UI.Dtos;
+namespace DataAccess.Dtos;
 
 public class VoiceDto : IInputData
 {
@@ -39,13 +37,13 @@ public class VoiceDto : IInputData
         return -1;
     }
 
-    public Sensor[] GetSensors()
+    public double[] GetProperties()
     {
         var properties = GetType().GetProperties();
         
         var result = properties
             .Where(prop => prop.PropertyType == typeof(double))
-            .Select(prop => new Sensor(prop.Name, (double)prop.GetValue(this)))
+            .Select(prop => (double)prop.GetValue(this))
             .ToArray();
 
         return result;
