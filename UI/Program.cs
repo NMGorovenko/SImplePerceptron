@@ -1,6 +1,7 @@
 ﻿using DataAccess.DataSource;
 using DataAccess.Dtos;
 using Domain;
+using UI;
 using UI.Helpers;
 
 const string pathToVoiceFile = "voice.csv";
@@ -10,47 +11,18 @@ var recordsStream = dataSource.GetRecordsFromCsv(pathToVoiceFile);
 var selections = await SelectionHelper.GetSelections<VoiceDto>(recordsStream, 0.8f, 0.2f);
 
 var inputSize = 20;
-var learningRate = 0.01d;
-var epochs = 50;
-var simplePerceptron = new SimplePerceptron(learningRate, inputSize);
-
-// simplePerceptron.Train(selections.TrainSelection.Concat(selections.TestSelection), epochs);
-//
-// var countRightAnswers = 0;
-// var errors = 0;
-// var testSelection = selections.TestSelection;
-// foreach (var voiceDto in testSelection)
-// {
-//     var guessBinary = simplePerceptron.PredictBinary(voiceDto);
-//     var guess = simplePerceptron.Predict(voiceDto.GetSensors());
-//     var answer = voiceDto.GetAnswer();
-//     Console.WriteLine($"guess = {guess} guessBinary = {guessBinary} should be = {answer}");
-//     if (guessBinary == answer)
-//     {
-//         ++countRightAnswers;
-//         continue;
-//     }
-//     ++errors;
-// }
-// var accuracy = (double)countRightAnswers / testSelection.Count * 100;
-//
-// var re = SimplePerceptron.meanError2 / SimplePerceptron.iter;
-// Console.WriteLine($"Right answers: {countRightAnswers}, errors: {errors}, accuracy = {accuracy}");
-
-
-var network = new MultiLayerPerceptron(inputSize: 20,
-    hiddenSize: 10,
-    outputSize: 1,
-    learnRate: 0.0001,
-    momentum: 0.95);
+var learningRate = 0.0001d;
+var epochs = 2000;
+var network = PerceptronFactory.GetMultiLayerPerceptron(learningRate, inputSize);
 
 var values = selections.TrainSelection
     .Select(voice => voice.GetProperties().ToArray())
     .ToArray();
-var targets = selections.TrainSelection.Select(sensor => new double[] {sensor.GetAnswer()}).ToArray();
+var targets = selections.TrainSelection.Select(sensor => (double)sensor.GetAnswer()).ToArray();
+
 network.Train(values: values,
     targets: targets,
-    1000);
+    epochs);
 
 var testSelection = selections.TestSelection;
 
@@ -60,21 +32,19 @@ foreach (var voiceDto in testSelection)
 {
     var input = voiceDto.GetProperties().ToArray();
     var rightAnswer = voiceDto.GetAnswer();
-    var compute = network.Compute(input)[0];
-    var networkAnswer = network.GetBinaryResult(compute);
+    var prediction = network.PredictBinary(input);
     
-    if (Math.Abs(networkAnswer - rightAnswer) < 0.05)
+    if (prediction == rightAnswer)
     {
         ++countRightAnswers;
         continue;
     }
     
-    Console.WriteLine($"guess = {compute}, binaryGuess = {networkAnswer} should be = {rightAnswer}");
+    // Console.WriteLine($"binaryGuess = {prediction} should be = {rightAnswer}");
     ++errors;
 }
 var accuracy = (double)countRightAnswers / testSelection.Count * 100;
 
-var re = SimplePerceptron.meanError2 / SimplePerceptron.iter;
 Console.WriteLine($"Right answers: {countRightAnswers}, errors: {errors}, accuracy = {accuracy}");
 
 

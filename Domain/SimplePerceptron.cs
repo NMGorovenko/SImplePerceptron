@@ -3,12 +3,13 @@ using Domain.Interfaces;
 
 namespace Domain;
 
-public class SimplePerceptron
+public class SimplePerceptron : IPerceptron
 {
-    private double LearningRate { get; set; }
-
-    private double[] weights { get; set; }
-    private readonly Random random;
+    private static readonly Random Random = new Random();
+    
+    public int InputSize { get; set; }
+    public double LearningRate { get; set; }
+    public double[] Weights { get; set; }
     
     /// <summary>
     /// Constructor.
@@ -16,58 +17,52 @@ public class SimplePerceptron
     public SimplePerceptron(double learningRate, int inputSize)
     {
         LearningRate = learningRate;
-        weights = new double[inputSize];
-        random = new Random();
-        for (int i = 0; i < weights.Length; i++)
+        InputSize = inputSize;
+        Weights = new double[inputSize];
+        
+        for (int i = 0; i < Weights.Length; i++)
         {
-            weights[i] = random.NextDouble() * 2 - 1;
+            Weights[i] = GetRandomDouble();
         }
-        bias = random.NextDouble() * 2 - 1;
+        bias = GetRandomDouble();
     }
     
     private double bias { get; set; }
 
-    public void Train(IEnumerable<IInputData> inputDatas, int epochs)
+    public void Train(double[][] values, double[] targets, int numEpochs)
     {
-        var totalError = 0D;
-        foreach (var epoch in Enumerable.Range(0, epochs))
+        foreach (var epoch in Enumerable.Range(0, numEpochs))
         {
-            var epochError = 0D;
-            foreach (var inputData in inputDatas)
-            { 
-                var trainResult = Train(inputData);
-                epochError += Math.Abs(trainResult.LocalError);
+            for (var i = 0; i < values.Length; ++i)
+            {
+                Train(values[i], targets[i]);
             }
-            
-            totalError += epochError / inputDatas.Count();
         }
     }
-
-    private record TrainResult(double LocalError);
     
-    private TrainResult Train(IInputData inputData)
+    private void Train(double[] inputs, double target)
     {
-        var target = inputData.GetAnswer();
-        var inputs = inputData.GetProperties();
-        var prediction = Predict(inputs);
-        var localError = target - prediction;
-        
-        for (int i = 0; i < weights.Length; i++)
-        {
-            weights[i] += LearningRate * inputs[i] * localError * (prediction * (1 - prediction));
-        }
-
-        bias += localError * LearningRate * prediction * (1 - prediction);
-        
-        return new TrainResult(localError);
+        var prediction = ForwardPropagate(inputs);
+        BackPropagate(inputs, target, prediction);
     }
 
-    public double Predict(double[] input)
+    private double ForwardPropagate(double[] inputs)
     {
-        var weightedSum = GetWeightSum(input);
-        weightedSum += bias;
+        var weightedSum = GetWeightSum(inputs) + bias;
 
         return ActivatedFunction(weightedSum);
+    }
+
+    private void BackPropagate(double[] inputs, double target, double prediction)
+    {
+        var loss = target - prediction;
+        
+        for (int i = 0; i < Weights.Length; i++)
+        {
+            Weights[i] += LearningRate * inputs[i] * loss * (prediction * (1 - prediction));
+        }
+
+        bias += loss * LearningRate * prediction * (1 - prediction);
     }
 
     private double ActivatedFunction(double weightedSum)
@@ -75,23 +70,26 @@ public class SimplePerceptron
         return MathHelper.Sigmoid(weightedSum);
     }
 
-    public static double meanError2 = 0;
-    public static int iter = 0; 
-
-    public int PredictBinary(IInputData inputs)
+    public int PredictBinary(double[] inputs)
     {
-        var prediction = Predict(inputs.GetProperties());
-        return prediction > 0.5 ? 1 : -1;
+        var prediction = ForwardPropagate(inputs);
+        return prediction > 0.15 ? 1 : -1;
     }
 
     public double GetWeightSum(double[] inputs)
     {
         double sum = 0;
-        for (int i = 0; i < weights.Length; i++)
+        for (int i = 0; i < Weights.Length; i++)
         {
-            sum += inputs[i] * weights[i];
+            sum += inputs[i] * Weights[i];
         }
 
         return sum;
     }
+    
+    public static double GetRandomDouble()
+    {
+        return 2 * Random.NextDouble() - 1;
+    }
+
 }

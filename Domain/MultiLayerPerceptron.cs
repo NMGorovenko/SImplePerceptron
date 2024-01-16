@@ -1,6 +1,8 @@
-﻿namespace Domain;
+﻿using Domain.Interfaces;
 
-public class MultiLayerPerceptron
+namespace Domain;
+
+public class MultiLayerPerceptron : IPerceptron
 {
 	public int InputSize { get; set; }
 	public int HiddenSize { get; set; }
@@ -68,7 +70,7 @@ public class MultiLayerPerceptron
 		}
 	}
 
-	public void Train(double[][] values, double[][] targets, int numEpochs)
+	public void Train(double[][] values, double[] targets, int numEpochs)
 	{
 		if (values.Length != targets.Length)
 		{
@@ -112,12 +114,12 @@ public class MultiLayerPerceptron
 		}
 	}
 
-	private void BackPropagate(double[] inputs, double[] targets)
+	private void BackPropagate(double[] inputs, double targets)
 	{
 		// Calculate gradient (output layer)
 		for (int i = 0; i < OutputSize; i++)
 		{
-			OutputGradient[i] = (targets[i] - OutputValue[i]) * SigmoidDerivative(OutputValue[i]);
+			OutputGradient[i] = (targets - OutputValue[i]) * SigmoidDerivative(OutputValue[i]);
 		}
 
 		// Calculate gradient (hidden layer)
@@ -166,10 +168,10 @@ public class MultiLayerPerceptron
 		}
 	}
 
-	public double[] Compute(double[] inputs)
+	public double Compute(double[] inputs)
 	{
 		ForwardPropagate(inputs);
-		return OutputValue;
+		return OutputValue[0];
 	}
 
 	public double CalculateError(params double[] targets)
@@ -199,8 +201,9 @@ public class MultiLayerPerceptron
 		return 2 * Random.NextDouble() - 1;
 	}
 
-	public int GetBinaryResult(double val)
+	public int PredictBinary(double[] inputs)
 	{
+		var val = Compute(inputs);
 		return val > 0.15 ? 1 : -1;
 	}
 }
