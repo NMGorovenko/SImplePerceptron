@@ -1,3 +1,3 @@
 ﻿namespace Domain.Interfaces;
 
-public interface IInputData : IHaveSensors, IHaveAnswer;
+public interface IInputData : IHaveProperties, IHaveAnswer;

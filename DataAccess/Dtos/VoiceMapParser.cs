@@ -1,6 +1,6 @@
 ﻿using CsvHelper.Configuration;
 
-namespace UI.Dtos;
+namespace DataAccess.Dtos;
 
 public class VoiceMapParser : ClassMap<VoiceDto>
 {

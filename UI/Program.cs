@@ -1,6 +1,6 @@
-﻿using Domain;
-using UI.DataSource;
-using UI.Dtos;
+﻿using DataAccess.DataSource;
+using DataAccess.Dtos;
+using Domain;
 using UI.Helpers;
 
 const string pathToVoiceFile = "voice.csv";
@@ -45,7 +45,7 @@ var network = new MultiLayerPerceptron(inputSize: 20,
     momentum: 0.95);
 
 var values = selections.TrainSelection
-    .Select(x => x.GetSensors().Select(sensor => sensor.Value).ToArray())
+    .Select(voice => voice.GetProperties().ToArray())
     .ToArray();
 var targets = selections.TrainSelection.Select(sensor => new double[] {sensor.GetAnswer()}).ToArray();
 network.Train(values: values,
@@ -58,7 +58,7 @@ var countRightAnswers = 0;
 var errors = 0;
 foreach (var voiceDto in testSelection)
 {
-    var input = voiceDto.GetSensors().Select(x => x.Value).ToArray();
+    var input = voiceDto.GetProperties().ToArray();
     var rightAnswer = voiceDto.GetAnswer();
     var compute = network.Compute(input)[0];
     var networkAnswer = network.GetBinaryResult(compute);
